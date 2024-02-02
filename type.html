@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>タイピングゲーム</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            text-align: center;
+            margin: 50px;
+            background-color: #f8f9fa;
+        }
+
+        #game-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease;
+        }
+
+        h1 {
+            color: #343a40;
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+
+        #word-display {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: #007bff;
+            transition: color 0.3s ease;
+        }
+
+        #input-box {
+            font-size: 28px;
+            padding: 15px;
+            width: 80%;
+            box-sizing: border-box;
+            margin-bottom: 20px;
+            border: 3px solid #007bff;
+            border-radius: 15px;
+            color: #007bff;
+            transition: border-color 0.3s ease, color 0.3s ease;
+        }
+
+        #game-stats {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center; /* 中央に配置するための追加 */
+            margin-top: 20px;
+        }
+
+        .stat-box {
+            flex-basis: 48%;
+            padding: 15px;
+            padding-top: 15px;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            background-color: #f8f9fa;
+            margin-bottom: 15px;
+            text-align: center; /* 中央に配置するための追加 */
+        }
+
+        #timer,
+        #score,
+        #answer-timer {
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+
+        #message {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #dc3545;
+        }
+
+        .text-success {
+            color: #28a745;
+        }
+
+        .text-danger {
+            color: #dc3545;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="game-container">
+        <h1>タイピングゲーム</h1>
+        <div id="word-display">Loading...</div>
+        <input type="text" id="input-box" placeholder="ここにタイプしてください" oninput="checkInput()">
+        <div id="game-stats">
+            <div class="stat-box" id="timer">ゲーム残り時間: <span id="game-time"></span> 秒</div>
+            <div class="stat-box" id="score">正解数: <span id="correctCount">0</span></div>
+            <div class="stat-box" id="answer-timer">解答時間: <span id="answer-time"></span> 秒</div>
+        </div>
+        <div id="message"></div>
+    </div>
+
+    <script>
+        const words = ['elephant', 'telescope', 'cookie', 'horizon', 'guitar', 'rainbow', 'butterfly', 'hammer', 'galaxy', 'pineapple',
+            'keyboard', 'ocean', 'balloon', 'castle', 'dragon', 'whisper', 'umbrella', 'volcano', 'bicycle', 'compass',
+            'enigma', 'glacier', 'lighthouse', 'quasar', 'potion', 'satellite', 'pyramid', 'marshmallow', 'symphony', 'lantern',
+            'tornado', 'treasure', 'avalanche', 'pajamas', 'paradox', 'blueprint', 'echo', 'espresso', 'jigsaw', 'meadow',
+            'velvet', 'octopus', 'scepter', 'whisper', 'zenith', 'galaxy', 'fossil', 'infinity', 'rainbow', 'stardust',
+            'infinity', 'radiance', 'elixir', 'bubble', 'paragon', 'moonlight', 'blossom', 'melody', 'tapestry', 'oasis',
+            'serenade', 'stardust', 'alchemy', 'mosaic', 'cascade', 'infinity', 'ember', 'velocity', 'harmony', 'nebula',
+            'synchrony', 'breeze', 'prism', 'cascade', 'odyssey', 'quasar', 'saffron', 'zephyr', 'kaleidoscope', 'cascade',
+            'serendipity', 'zenith', 'solstice', 'azure', 'odyssey', 'ethereal', 'euphoria', 'nimbus', 'pinnacle', 'velvet',
+            'elysium', 'glitter', 'serenity', 'enigma', 'utopia', 'labyrinth', 'whirlwind', 'nebula', 'jubilee', 'infinity',
+            'melody', 'luminosity', 'nocturne', 'harmony', 'labyrinth', 'radiant', 'zest', 'serenity', 'tranquility', 'effervescence',
+            'enigma', 'kaleidoscope', 'symphony', 'ethereal', 'solace', 'serendipity', 'enchant', 'cascade', 'zenith', 'jubilee',
+            'infinity', 'blossom', 'twilight', 'moonbeam', 'crystalline', 'azure', 'serenade', 'sapphire', 'celestial', 'nebula',
+            'radiant', 'elixir', 'harmony', 'twilight', 'luminous', 'whisper', 'infinity', 'serenity', 'cascade', 'opulent', 'trinket',
+            'radiant', 'ethereal', 'luminosity', 'serendipity', 'jubilee', 'labyrinth', 'radiant', 'cascade', 'tranquility',
+            'apple', 'book', 'phone', 'poteto', 'key', 'door', 'sad', 'sun', 'egg', 'hat', 'cat', 'dog', 'wax', 'bus', 'car', 'toy', 'leg', 'arm',
+            'lip', 'toe', 'bat', 'cap', 'fan', 'rug', 'ant', 'bus', 'bee', 'cut', 'bug', 'nut', 'ice', 'happy', 'jaw', 'log', 'mug', 'pin', 'pot',
+            'pig', 'meet', 'cup', 'mix', 'net', 'web', 'map', 'gum', 'gem', 'sox', 'game', 'water', 'jet', 'gun', 'code', 'fin', 'pan', 'middle', 'fun',
+            'van', 'pod', 'pen', 'ballpen', 'pan', 'box', 'wolf', 'rap', 'pip', 'net', 'gan', 'ipad', 'rat', 'cap', 'gap', 'fix', 'fox', 'eye', 'bed'];
+
+        let currentWordIndex;
+        let currentWord;
+        let gameTimer;
+        let answerTimer;
+        let gameDuration = 60; // seconds
+        let answerTime = 15; // seconds
+        let correctCount = 0;
+
+        function startGame() {
+            currentWordIndex = Math.floor(Math.random() * words.length);
+            currentWord = words[currentWordIndex];
+            document.getElementById('word-display').textContent = currentWord;
+
+            clearInterval(answerTimer);
+            document.getElementById('answer-time').textContent = answerTime;
+
+            answerTimer = setInterval(() => {
+                let time = parseInt(document.getElementById('answer-time').textContent, 10);
+
+                if (time > 0) {
+                    document.getElementById('answer-time').textContent = --time;
+                } else {
+                    clearInterval(answerTimer);
+                    displayMessage('時間切れです。次の単語に進みます。', 'text-danger');
+                    startGame();
+                }
+            }, 1000);
+
+            if (!gameTimer || parseInt(document.getElementById('game-time').textContent, 10) === 0) {
+                clearInterval(gameTimer);
+                document.getElementById('game-time').textContent = gameDuration;
+
+                gameTimer = setInterval(() => {
+                    let time = parseInt(document.getElementById('game-time').textContent, 10);
+
+                    if (time > 0) {
+                        document.getElementById('game-time').textContent = --time;
+                    } else {
+                        clearInterval(gameTimer);
+                        displayMessage('ゲーム終了です。正解数: ' + correctCount);
+                        correctCount = 0; // ゲーム残り時間が0になったら正解数を0にリセット
+                        startGame();
+                    }
+                }, 1000);
+            }
+        }
+
+        function checkInput() {
+            const userInput = document.getElementById('input-box').value.trim();
+
+            if (userInput === currentWord) {
+                correctCount++;
+                document.getElementById('correctCount').textContent = correctCount;
+
+                clearInterval(answerTimer);
+                displayMessage('正確です！次の単語に進みます。', 'text-success');
+                startGame();
+                document.getElementById('input-box').value = '';
+            } else if (userInput.length === currentWord.length && userInput !== currentWord) {
+                displayMessage('タイプミスです。次の単語に進みます。', 'text-danger');
+                startGame();
+                document.getElementById('input-box').value = '';
+            }
+        }
+
+        function displayMessage(message, className) {
+            const messageElement = document.getElementById('message');
+            messageElement.textContent = message;
+            messageElement.className = className;
+            setTimeout(() => {
+                messageElement.textContent = '';
+                messageElement.className = '';
+            }, 2000);
+        }
+
+        startGame();
+    </script>
+</body>
+
+</html>
